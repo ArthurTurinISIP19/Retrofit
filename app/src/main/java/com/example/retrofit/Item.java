@@ -27,7 +27,7 @@ public class Item {
         return login;
     }
 
-    /**
+    /**123
      * @param login The login
      */
     public void setLogin(String login) {
