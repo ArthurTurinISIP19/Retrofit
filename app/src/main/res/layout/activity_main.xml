@@ -39,6 +39,24 @@
             android:layout_weight="1"
             android:onClick="onClick2"
             android:text="Members" />
+
+        <Button
+            android:id="@+id/button4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:onClick="onClick3"
+            android:text="name" />
+
+        <Button
+            android:id="@+id/button5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:onClick="onClick4"
+            android:text="umorili" />
     </LinearLayout>
 
     <ScrollView
@@ -55,6 +73,13 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
+            <EditText
+                android:id="@+id/editText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="textPersonName" />
+
             <TextView
                 android:id="@+id/textView"
                 android:layout_width="match_parent"
@@ -62,6 +87,11 @@
                 android:fontFamily="sans-serif-condensed"
                 android:textAlignment="center"
                 android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
 
         </LinearLayout>
     </ScrollView>

@@ -1,13 +1,19 @@
 package com.example.retrofit;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import okhttp3.ResponseBody;
@@ -18,8 +24,11 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
 
     private ProgressBar mProgressBar;
+    RecyclerView mRecyclerView;
+    List<UPost> mPosts;
     private TextView mTextView;
-
+    private EditText editText;
+    private String x = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,7 +38,55 @@ public class MainActivity extends AppCompatActivity {
         mTextView = (TextView) findViewById(R.id.textView);
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
         mProgressBar.setVisibility(View.INVISIBLE);
+        editText = (EditText) findViewById(R.id.editText);
+
+        mPosts = new ArrayList<>();
+
+        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(layoutManager);
+
+        UmoriliAdapter adapter = new UmoriliAdapter(mPosts);
+        mRecyclerView.setAdapter(adapter);
+
+        UmoriliService umoriliService = UmoriliService.retrofit.create(UmoriliService.class);
+
+        final Call<List<UPost>> call = umoriliService.getData("bash", 50);
+
+        call.enqueue((new Callback<List<UPost>>() {
+            @Override
+            public void onResponse(Call<List<UPost>> call, Response<List<UPost>> response) {
+                // response.isSuccessfull() возвращает true если код ответа 2xx
+                if (response.isSuccessful()) {
+                    // Выводим массив имён
+                    mPosts.addAll(response.body());
+                    mRecyclerView.getAdapter().notifyDataSetChanged();
+
+                    mProgressBar.setVisibility(View.INVISIBLE);
+                } else {
+                    // Обрабатываем ошибку
+                    ResponseBody errorBody = response.errorBody();
+                    try {
+                        Toast.makeText(MainActivity.this, errorBody.string(),
+                                Toast.LENGTH_SHORT).show();
+                        mProgressBar.setVisibility(View.INVISIBLE);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<UPost>> call, Throwable throwable) {
+                Toast.makeText(MainActivity.this, "Что-то пошло не так",
+                        Toast.LENGTH_SHORT).show();
+                mProgressBar.setVisibility(View.INVISIBLE);
+            }
+        }));
     }
+
+
+
 
 
     public void onClick(View view) {
@@ -132,5 +189,91 @@ public class MainActivity extends AppCompatActivity {
                 textView.setText("Что-то пошло не так: " + throwable.getMessage());
             }
         });
+    }
+
+    public void onClick3(View view) {
+        mProgressBar.setVisibility(View.VISIBLE);
+        String result = editText.getText().toString();
+        //x.setText(result);
+
+        GitHubService gitHubService = GitHubService.retrofit.create(GitHubService.class);
+        // часть слова
+        final Call<GitResult> call =
+                gitHubService.getUsers(result);
+
+        call.enqueue(new Callback<GitResult>() {
+            @Override
+            public void onResponse(Call<GitResult> call, Response<GitResult> response) {
+                // response.isSuccessful() is true if the response code is 2xx
+                if (response.isSuccessful()) {
+                    GitResult result = response.body();
+
+                    // Получаем json из github-сервера и конвертируем его в удобный вид
+                    // Покажем только первого пользователя
+                    String user = "Аккаунт Github: " + result.getItems().get(0).getLogin();
+                    mTextView.setText(user);
+                    Log.i("Git", String.valueOf(result.getItems().size()));
+
+                    mProgressBar.setVisibility(View.INVISIBLE);
+                } else {
+                    int statusCode = response.code();
+
+                    // handle request errors yourself
+                    ResponseBody errorBody = response.errorBody();
+                    try {
+                        mTextView.setText(errorBody.string());
+                        mProgressBar.setVisibility(View.INVISIBLE);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<GitResult> call, Throwable throwable) {
+                mTextView.setText("Что-то пошло не так: " + throwable.getMessage());
+            }
+        });
+    }
+
+    public void onClick4(View view) {
+        mProgressBar.setVisibility(View.VISIBLE);
+
+        UmoriliService umoriliService = UmoriliService.retrofit.create(UmoriliService.class);
+
+        // Выводим для проверки только три поста
+        final Call<List<UPost>> call = umoriliService.getData("bash", 3);
+
+        call.enqueue((new Callback<List<UPost>>() {
+            @Override
+            public void onResponse(Call<List<UPost>> call, Response<List<UPost>> response) {
+                // response.isSuccessfull() возвращает true если код ответа 2xx
+                if (response.isSuccessful()) {
+                    // Выводим посты по отдельности
+                    for (int i = 0; i < response.body().size(); i++) {
+                        mTextView.append(response.body().get(i).getElementPureHtml() + "\n");
+                    }
+
+                    mProgressBar.setVisibility(View.INVISIBLE);
+                } else {
+                    int statusCode = response.code();
+                    // Обрабатываем ошибку
+                    ResponseBody errorBody = response.errorBody();
+                    try {
+                        mTextView.setText(errorBody.string());
+                        mProgressBar.setVisibility(View.INVISIBLE);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<UPost>> call, Throwable throwable) {
+                mTextView.setText("Что-то пошло не так: " + throwable.getMessage());
+                mProgressBar.setVisibility(View.INVISIBLE);
+            }
+        }));
+
     }
 }
